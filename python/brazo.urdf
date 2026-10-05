@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<robot name="robot_con_pinza">
+
+  <!-- ================= MATERIALS (Mismos que antes) ================= -->
+  <material name="base_material">
+    <color rgba="0.3 0.3 0.3 1"/>
+  </material>
+  <material name="brazo1_material">
+    <color rgba="0.2 0.6 0.8 1"/>
+  </material>
+  <material name="brazo2_material">
+    <color rgba="0.9 0.5 0.1 1"/>
+  </material>
+  <material name="pinza_material">
+    <color rgba="0.8 0.2 0.2 1"/>
+  </material>
+  <material name="dodo_material">
+    <color rgba="0.7 0.7 0.7 1"/>
+  </material>
+
+  <!-- ================= LINKS & JOINTS EXISTENTES ================= -->
+  <!-- Base, Brazo 1 y Brazo 2 permanecen igual -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.15" radius="0.25"/>
+      </geometry>
+      <origin xyz="0 0 0.075"/>
+      <material name="base_material"/>
+    </visual>
+  </link>
+
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="brazo1_link"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="10.0" velocity="1.0"/>
+  </joint>
+
+  <link name="brazo1_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.4" radius="0.08"/>
+      </geometry>
+      <origin xyz="0 0 0.2"/>
+      <material name="brazo1_material"/>
+    </visual>
+  </link>
+
+  <joint name="joint_2" type="revolute">
+    <parent link="brazo1_link"/>
+    <child link="brazo2_link"/>
+    <origin xyz="0 0 0.4" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10.0" velocity="1.0"/>
+  </joint>
+
+  <link name="brazo2_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.3" radius="0.06"/>
+      </geometry>
+      <origin xyz="0 0 0.15"/>
+      <material name="brazo2_material"/>
+    </visual>
+  </link>
+
+  <!-- ================= SECCIÓN CORREGIDA: LA PINZA ================= -->
+
+  <!-- 1. BASE DE LA PINZA (Link Fijo) -->
+  <!-- Este link rojo NO se mueve, es el padre de los dedos -->
+  <joint name="joint_base_pinza_fija" type="fixed">
+    <parent link="brazo2_link"/>
+    <child link="base_pinza_roja"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/> <!-- Al final del brazo naranja -->
+  </joint>
+
+  <link name="base_pinza_roja">
+    <visual>
+      <geometry>
+        <box size="0.1 0.08 0.03"/> <!-- La base roja fija -->
+      </geometry>
+      <origin xyz="0 0 0.015"/> <!-- Centrada en el joint -->
+      <material name="pinza_material"/>
+    </visual>
+  </link>
+
+  <!-- 2. DEDO IZQUIERDO (Joint Prismático Activo) -->
+  <!-- Se desliza sobre la base fija -->
+  <joint name="joint_gripper" type="prismatic">
+    <parent link="base_pinza_roja"/>
+    <child link="dodo_izq"/>
+    <origin xyz="-0.04 0 0.03" rpy="0 0 0"/> <!-- Posición inicial en el borde izq de la base roja -->
+    <axis xyz="1 0 0"/> <!-- Se mueve en el eje X -->
+    <limit lower="0.0" upper="0.03" effort="5.0" velocity="0.5"/> <!-- Límite de deslizamiento -->
+  </joint>
+
+  <link name="dodo_izq">
+    <visual>
+      <geometry>
+        <box size="0.015 0.04 0.1"/> <!-- Un dedo gris -->
+      </geometry>
+      <origin xyz="0.0075 0 0.05"/> <!-- Centrado para deslizarse desde el borde -->
+      <material name="dodo_material"/>
+    </visual>
+  </link>
+
+  <!-- 3. DEDO DERECHO (Joint Prismático Pasivo / Mímico) -->
+  <!-- Se mueve automáticamente en sentido opuesto al izquierdo -->
+  <joint name="joint_gripper_der" type="prismatic">
+    <parent link="base_pinza_roja"/>
+    <child link="dodo_der"/>
+    <origin xyz="0.04 0 0.03" rpy="0 0 0"/> <!-- Posición inicial en el borde der de la base roja -->
+    <axis xyz="-1 0 0"/> <!-- Se mueve en el eje X negativo -->
+    <limit lower="0.0" upper="0.03" effort="5.0" velocity="0.5"/>
+    <mimic joint="joint_gripper" multiplier="1" offset="0"/> <!-- Copia el movimiento del joint_gripper -->
+  </joint>
+
+  <link name="dodo_der">
+    <visual>
+      <geometry>
+        <box size="0.015 0.04 0.1"/> <!-- El otro dedo gris -->
+      </geometry>
+      <origin xyz="-0.0075 0 0.05"/> <!-- Centrado opuestamente -->
+      <material name="dodo_material"/>
+    </visual>
+  </link>
+
+</robot>
